@@ -42,7 +42,7 @@ def _load_env():
 
                 if key:
                     _config_vars[key] = value
-                    # Also export to os.environ so 3rd-party SDKs (like openai) can use them natively
+                    # Also export to os.environ so 3rd-party SDKs can use them natively
                     os.environ[key] = value
 
     except Exception as e:
@@ -66,7 +66,6 @@ def get_api_key(provider_name: str) -> str | None:
     provider_name = provider_name.strip().upper()
     
     # Generate the expected key name (e.g., "openai" -> "OPENAI_KEY")
-    # Also handles if the user accidentally passes "OPENAI_KEY" directly
     if provider_name.endswith("_KEY"):
         target_key = provider_name
     else:
