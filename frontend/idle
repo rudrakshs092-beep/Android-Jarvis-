@@ -1,0 +1,13 @@
+<script>
+  let state = "idle"; // "idle" (Flower), "listening" (Arc Reactor), "talking" (IronMan Face)
+
+  function renderLoop() {
+    if (state === "idle") {
+      DrawFlowerAnimation(); // Aapka pehla wala Flower code
+    } else if (state === "talking") {
+      drawIronManFace(ctx, canvas.width, canvas.height, Math.sin(Date.now() * 0.005) + 1.2);
+    }
+    requestAnimationFrame(renderLoop);
+  }
+  renderLoop();
+</script>
