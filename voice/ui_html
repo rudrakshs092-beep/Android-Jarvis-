@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JARVIS AI</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000000; color: #00f3ff; font-family: sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
+    
+    #canvas-container { width: 100vw; height: 80vh; position: relative; display: flex; justify-content: center; align-items: center; }
+    canvas { display: block; }
+
+    /* One-Time Permission Overlay */
+    .perm-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; text-align: center; }
+    .perm-modal button { margin-top: 20px; padding: 12px 30px; background: #00f3ff; color: #000; border: none; font-weight: bold; border-radius: 20px; cursor: pointer; box-shadow: 0 0 15px #00f3ff; }
+
+    /* AdMob Container Slot */
+    .ad-slot { width: 100vw; height: 10vh; background: #050505; border-top: 1px solid rgba(0,243,255,0.2); display: flex; justify-content: center; align-items: center; font-size: 12px; color: #00f3ff; opacity: 0.6; }
+  </style>
+</head>
+<body>
+
+  <div id="canvas-container">
+    <canvas id="mainCanvas"></canvas>
+  </div>
+
+  <div class="ad-slot" id="admobContainer">ADMOB BANNER SLOT</div>
+
+  <!-- Permission Modal -->
+  <div class="perm-modal" id="permModal">
+    <h2>SYSTEM PERMISSION</h2>
+    <p style="margin-top:10px; color:#888;">Allow Mic access for JARVIS Interface</p>
+    <button onclick="enableMic()">ALLOW ACCESS</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('mainCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight * 0.8;
+
+    let appState = "idle"; // "idle", "listening", "talking"
+    let audioContext, analyser, dataArray;
+
+    // 1. One-Time Permission Logic
+    if (localStorage.getItem('jarvis_perm_granted') === 'true') {
+      document.getElementById('permModal').style.display = 'none';
+      initAudio();
+    }
+
+    async function enableMic() {
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        localStorage.setItem('jarvis_perm_granted', 'true');
+        document.getElementById('permModal').style.display = 'none';
+        initAudio();
+      } catch (err) {
+        alert("Permission required to activate JARVIS.");
+      }
+    }
+
+    // 2. Audio Processing Engine
+    async function initAudio() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+        const source = audioContext.createMediaStreamSource(stream);
+        source.connect(analyser);
+        analyser.fftSize = 64;
+        dataArray = new Uint8Array(analyser.frequencyBinCount);
+      } catch (e) {
+        console.log("Audio Init Error: ", e);
+      }
+    }
+
+    // 3. Main Render Loop (No Lag / Bug Free)
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      let volume = 0;
+      if (analyser && dataArray) {
+        analyser.getByteFrequencyData(dataArray);
+        volume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+      }
+
+      // Iron Man Face / Core Rendering in Cyan Theme (#00f3ff)
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      const pulse = 1 + (volume / 128);
+
+      ctx.strokeStyle = "#00f3ff";
+      ctx.fillStyle = "#00f3ff";
+      ctx.shadowColor = "#00f3ff";
+      ctx.shadowBlur = 15 * pulse;
+      ctx.lineWidth = 2;
+
+      // Draw Arc Reactor Core
+      ctx.beginPath();
+      ctx.arc(cx, cy, 50 * pulse, 0, Math.PI * 2);
+      ctx.stroke();
+
+      requestAnimationFrame(render);
+    }
+
+    render();
+  </script>
+</body>
+</html>
